@@ -59,7 +59,6 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   // Swagger documentation
-  if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Repayment API')
       .setDescription('Comprehensive repayment platform API')
@@ -77,7 +76,6 @@ async function bootstrap() {
         displayRequestDuration: true,
       },
     });
-  }
 
   // Static file serving
   const fastify = app.getHttpAdapter().getInstance();
