@@ -7,32 +7,32 @@ import { BaseEntity, BaseSchemaOptions } from 'src/common/schemas/base.schema';
 
 @Schema(BaseSchemaOptions)
 export class Order extends BaseEntity {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  clientId: Types.ObjectId | User;
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  clientId?: Types.ObjectId | User;
 
-  @Prop({ type: Types.ObjectId, ref: 'Case', required: true })
-  caseId: Types.ObjectId | Case;
+  @Prop({ type: Types.ObjectId, ref: 'Case' })
+  caseId?: Types.ObjectId | Case;
 
-  @Prop({ type: Types.ObjectId, ref: 'ServicePackage', required: true })
-  packageId: Types.ObjectId | ServicePackage;
+  @Prop({ type: Types.ObjectId, ref: 'ServicePackage' })
+  packageId?: Types.ObjectId | ServicePackage;
 
   @Prop({ default: 'PENDING' })
-  status: string;
+  status?: string;
 
-  @Prop({ required: true, type: Number })
-  amount: number;
+  @Prop({ type: Number })
+  amount?: number;
 
   @Prop({ default: 'USD' })
-  currency: string;
+  currency?: string;
 
   @Prop()
-  paymentMethod: string;
+  paymentMethod?: string;
 
   @Prop()
-  paymentRef: string;
+  paymentRef?: string;
 
   @Prop()
-  paidAt: Date;
+  paidAt?: Date;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

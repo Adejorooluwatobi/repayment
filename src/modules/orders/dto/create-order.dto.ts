@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator';
+import { ServicePackage } from 'src/modules/service-packages/schemas/service-package.schema';
 
 export class CreateOrderDto {
   @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1a', description: 'The User ID of the client' })
@@ -15,17 +16,7 @@ export class CreateOrderDto {
   @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1c', description: 'The purchased Service Package ID' })
   @IsString()
   @IsNotEmpty()
-  packageId: string;
-
-  @ApiPropertyOptional({ example: 'PENDING', description: 'The status of the order', default: 'PENDING' })
-  @IsString()
-  @IsOptional()
-  status?: string;
-
-  @ApiProperty({ example: 49.99, description: 'The total amount of the order' })
-  @IsNumber()
-  @IsNotEmpty()
-  amount: number;
+  packageId: ServicePackage;
 
   @ApiPropertyOptional({ example: 'USD', description: 'The currency of the amount', default: 'USD' })
   @IsString()

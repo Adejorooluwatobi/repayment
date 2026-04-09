@@ -6,17 +6,17 @@ import { BaseEntity, BaseSchemaOptions } from 'src/common/schemas/base.schema';
 
 @Schema(BaseSchemaOptions)
 export class CaseNote extends BaseEntity {
-  @Prop({ type: Types.ObjectId, ref: 'Case', required: true })
-  caseId: Types.ObjectId | Case;
+  @Prop({ type: Types.ObjectId, ref: 'Case' })
+  caseId?: Types.ObjectId | Case;
 
-  @Prop({ type: Types.ObjectId, ref: 'Admin', required: true })
-  adminId: Types.ObjectId | Admin;
+  @Prop({ type: Types.ObjectId, ref: 'Admin' })
+  adminId?: Types.ObjectId | Admin;
 
-  @Prop({ required: true })
-  content: string;
+  @Prop()
+  content?: string;
 
   @Prop({ default: true })
-  isInternal: boolean;
+  isInternal?: boolean;
 }
 
 export const CaseNoteSchema = SchemaFactory.createForClass(CaseNote);

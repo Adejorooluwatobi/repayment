@@ -7,10 +7,10 @@ export class CreateConsultationDto {
   @IsOptional()
   clientId?: string;
 
-  @ApiPropertyOptional({ example: '60d5ecb8b392d7001f8e8e1b', description: 'The related Case ID' })
+  @ApiPropertyOptional({description: 'The related Case type' })
   @IsString()
   @IsOptional()
-  caseId?: string;
+  caseType?: string;
 
   @ApiPropertyOptional({ example: '60d5ecb8b392d7001f8e8e1c', description: 'The Admin ID assigned to this consultation' })
   @IsString()

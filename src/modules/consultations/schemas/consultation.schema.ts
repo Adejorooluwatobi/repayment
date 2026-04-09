@@ -1,20 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { User } from 'src/modules/users/schemas/user.schema';
-import { Case } from 'src/modules/cases/schemas/case.schema';
 import { Admin } from 'src/modules/admin/schemas/admin.schema';
 import { BaseEntity, BaseSchemaOptions } from 'src/common/schemas/base.schema';
 
 @Schema(BaseSchemaOptions)
 export class Consultation extends BaseEntity {
   @Prop({ type: Types.ObjectId, ref: 'User' })
-  clientId: Types.ObjectId | User;
+  clientId?: Types.ObjectId | User;
 
-  @Prop({ type: Types.ObjectId, ref: 'Case' })
-  caseId: Types.ObjectId | Case;
+  @Prop({ type: String })
+  caseType: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Admin' })
-  handledBy: Types.ObjectId | Admin;
+  handledBy?: Types.ObjectId | Admin;
 
   @Prop({ required: true })
   firstName: string;
