@@ -39,14 +39,42 @@ export class NotificationsService {
     }
   }
 
+  async findAllForUser(userId: string, onModel: string = 'Admin'): Promise<Notification[]> {
+    return this.notificationModel
+      .find({ userId, onModel })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async getUnreadCount(userId: string, onModel: string = 'Admin'): Promise<number> {
+    return this.notificationModel.countDocuments({ userId, onModel, read: false }).exec();
+  }
+
+  async markAllAsRead(userId: string, onModel: string = 'Admin'): Promise<void> {
+    await this.notificationModel
+      .updateMany({ userId, onModel, read: false }, { read: true })
+      .exec();
+  }
+
+  async markAsRead(id: string): Promise<Notification> {
+    const notification = await this.notificationModel.findByIdAndUpdate(
+      id,
+      { read: true },
+      { new: true },
+    ).exec();
+    if (!notification) throw new NotFoundException(`Notification with ID ${id} not found`);
+    return notification;
+  }
+
   async findAll(): Promise<Notification[]> {
-    return this.notificationModel.find().populate('userId').exec();
+    return this.notificationModel.find().populate('userId').sort({ createdAt: -1 }).exec();
   }
 
   async findOne(id: string): Promise<Notification> {
     const notification = await this.notificationModel.findById(id).populate('userId').exec();
     if (!notification) throw new NotFoundException(`Notification with ID ${id} not found`);
     
+    // Automatically mark as read when fetching single
     if (!notification.read) {
       notification.read = true;
       await notification.save();
