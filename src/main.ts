@@ -46,21 +46,7 @@ async function bootstrap() {
 
   // CORS configuration
   app.enableCors({
-    origin: (origin, callback) => {
-      // If we are not in production, allow all
-      if (process.env.NODE_ENV !== 'production') {
-        return callback(null, true);
-      }
-      
-      // In production, allow if origin is localhost or in ALLOWED_ORIGINS
-      const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
-      if (!origin || origin.includes('localhost') || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, false); // Block other origins
-      }
-    },
-    credentials: true,
+    origin: "*",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id', 'Accept'],
   });
