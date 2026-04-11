@@ -18,6 +18,11 @@ export class CreateOrderDto {
   @IsOptional()
   packageId: ServicePackage;
 
+  @ApiPropertyOptional({ example: 'PENDING', description: 'The status of the order' })
+  @IsString()
+  @IsOptional()
+  status?: string;
+
   @ApiProperty({ example: 'user@example.com' })
   @IsString()
   @IsOptional()

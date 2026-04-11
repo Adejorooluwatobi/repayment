@@ -36,6 +36,7 @@ export class OrdersController {
   }
 
   @Patch(':id')
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Update an order' })
   @ApiResponse({ status: 200, description: 'Order updated successfully', type: Order })
   async update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto): Promise<Order> {
