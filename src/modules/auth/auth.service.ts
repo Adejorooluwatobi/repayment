@@ -12,6 +12,8 @@ interface AuthResponse {
   admin?: { isAdmin: boolean; isActive: boolean; name: string; role: string; permissions: string[] };
 }
 
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -22,12 +24,22 @@ export class AuthService {
     private jwtService: JwtService,
     private userService: UserService,
     private adminService: AdminService,
+    private notificationsService: NotificationsService,
   ) {
     this.jwtSecret = this.configService.get<string>('JWT_SECRET') || 'your_super_secret_jwt_key_change_in_production';
   }
 
   async registerUser(userData: any): Promise<void> {
-    await this.userService.create(userData);
+    const user = await this.userService.create(userData);
+    
+    // Notify admins about new user registration
+    await this.notificationsService.notifyAdmins({
+      title: 'New User Registration',
+      message: `A new user ${user.firstName} ${user.lastName} has registered.`,
+      type: 'REGISTRATION',
+      refId: user._id as any,
+      refModel: 'User',
+    });
   }
 
   async loginUser(userLog: UserLoginDto): Promise<AuthResponse> {

@@ -5,8 +5,11 @@ import { BaseEntity, BaseSchemaOptions } from 'src/common/schemas/base.schema';
 
 @Schema(BaseSchemaOptions)
 export class Notification extends BaseEntity {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId | User;
+  @Prop({ type: Types.ObjectId, required: true, refPath: 'onModel' })
+  userId: Types.ObjectId;
+
+  @Prop({ required: true, enum: ['User', 'Admin'], default: 'User' })
+  onModel: string;
 
   @Prop({ required: true })
   type: string;

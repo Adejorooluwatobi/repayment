@@ -24,8 +24,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object') {
-        message = (exceptionResponse as any).message || exception.message;
-        details = (exceptionResponse as any).details;
+        const resMsg = (exceptionResponse as any).message;
+        if (Array.isArray(resMsg)) {
+          message = 'Validation failed';
+          details = resMsg;
+        } else {
+          message = resMsg || exception.message;
+          details = (exceptionResponse as any).details;
+        }
       }
       
       code = this.getErrorCode(status);

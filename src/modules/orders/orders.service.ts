@@ -5,13 +5,29 @@ import { Order } from './schemas/order.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class OrdersService {
-  constructor(@InjectModel(Order.name) private orderModel: Model<Order>) {}
+  constructor(
+    @InjectModel(Order.name) private orderModel: Model<Order>,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async create(createOrderDto: CreateOrderDto | any): Promise<Order> {
     const newOrder = new this.orderModel(createOrderDto);
-    return newOrder.save();
+    const order = await newOrder.save();
+
+    // Notify admins about new order
+    await this.notificationsService.notifyAdmins({
+      title: 'New Order Placed',
+      message: `A new order has been placed. Order ID: ${order._id}`,
+      type: 'ORDER',
+      refId: order._id as any,
+      refModel: 'Order',
+    });
+
+    return order;
   }
 
   async findAll(): Promise<Order[]> {

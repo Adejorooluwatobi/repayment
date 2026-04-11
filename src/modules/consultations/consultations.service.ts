@@ -5,13 +5,29 @@ import { Consultation } from './schemas/consultation.schema';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
 
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class ConsultationsService {
-  constructor(@InjectModel(Consultation.name) private stmtModel: Model<Consultation>) {}
+  constructor(
+    @InjectModel(Consultation.name) private stmtModel: Model<Consultation>,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async create(createConsultationDto: CreateConsultationDto | any): Promise<Consultation> {
     const newStmt = new this.stmtModel(createConsultationDto);
-    return newStmt.save();
+    const consultation = await newStmt.save();
+
+    // Notify admins about new consultation
+    await this.notificationsService.notifyAdmins({
+      title: 'New Consultation Booking',
+      message: `New consultation from ${consultation.firstName} ${consultation.lastName} (${consultation.email}).`,
+      type: 'CONSULTATION',
+      refId: consultation._id as any,
+      refModel: 'Consultation',
+    });
+
+    return consultation;
   }
 
   async findAll(): Promise<Consultation[]> {
