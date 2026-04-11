@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order } from './schemas/order.schema';
@@ -8,14 +8,35 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
-export class OrdersService {
+export class OrdersService implements OnModuleInit {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  async onModuleInit() {
+    this.logger.log('Running production data cleanup for Orders...');
+    
+    // Convert empty strings to null for reference fields to prevent population crashes
+    await this.orderModel.updateMany({ clientId: "" }, { $set: { clientId: null } });
+    await this.orderModel.updateMany({ caseId: "" }, { $set: { caseId: null } });
+    await this.orderModel.updateMany({ packageId: "" }, { $set: { packageId: null } });
+    
+    this.logger.log('Orders data cleanup completed.');
+  }
+
+  private sanitizeOrderData(data: any) {
+    if (data.clientId === "") data.clientId = null;
+    if (data.caseId === "") data.caseId = null;
+    if (data.packageId === "") data.packageId = null;
+    return data;
+  }
+
   async create(createOrderDto: CreateOrderDto | any): Promise<Order> {
-    const newOrder = new this.orderModel(createOrderDto);
+    const sanitizedData = this.sanitizeOrderData({ ...createOrderDto });
+    const newOrder = new this.orderModel(sanitizedData);
     const order = await newOrder.save();
 
     // Notify admins about new order
@@ -43,8 +64,9 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
+    const sanitizedData = this.sanitizeOrderData({ ...updateOrderDto });
     const updatedOrder = await this.orderModel
-      .findByIdAndUpdate(id, updateOrderDto, { new: true })
+      .findByIdAndUpdate(id, sanitizedData, { new: true })
       .exec();
     if (!updatedOrder) throw new NotFoundException(`Order with ID ${id} not found`);
     return updatedOrder;

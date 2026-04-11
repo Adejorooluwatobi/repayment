@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Consultation } from './schemas/consultation.schema';
@@ -8,14 +8,33 @@ import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
-export class ConsultationsService {
+export class ConsultationsService implements OnModuleInit {
+  private readonly logger = new Logger(ConsultationsService.name);
+
   constructor(
     @InjectModel(Consultation.name) private stmtModel: Model<Consultation>,
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  async onModuleInit() {
+    this.logger.log('Running production data cleanup for Consultations...');
+    
+    // Convert empty strings to null for reference fields to prevent population crashes
+    await this.stmtModel.updateMany({ clientId: "" }, { $set: { clientId: null } });
+    await this.stmtModel.updateMany({ handledBy: "" }, { $set: { handledBy: null } });
+    
+    this.logger.log('Consultations data cleanup completed.');
+  }
+
+  private sanitizeConsultationData(data: any) {
+    if (data.clientId === "") data.clientId = null;
+    if (data.handledBy === "") data.handledBy = null;
+    return data;
+  }
+
   async create(createConsultationDto: CreateConsultationDto | any): Promise<Consultation> {
-    const newStmt = new this.stmtModel(createConsultationDto);
+    const sanitizedData = this.sanitizeConsultationData({ ...createConsultationDto });
+    const newStmt = new this.stmtModel(sanitizedData);
     const consultation = await newStmt.save();
 
     // Notify admins about new consultation
@@ -41,8 +60,9 @@ export class ConsultationsService {
   }
 
   async update(id: string, updateConsultationDto: UpdateConsultationDto): Promise<Consultation> {
+    const sanitizedData = this.sanitizeConsultationData({ ...updateConsultationDto });
     const updatedStmt = await this.stmtModel
-      .findByIdAndUpdate(id, updateConsultationDto, { new: true })
+      .findByIdAndUpdate(id, sanitizedData, { new: true })
       .exec();
     if (!updatedStmt) throw new NotFoundException(`Consultation with ID ${id} not found`);
     return updatedStmt;

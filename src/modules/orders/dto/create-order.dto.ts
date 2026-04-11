@@ -1,20 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsMongoId } from 'class-validator';
 import { ServicePackage } from 'src/modules/service-packages/schemas/service-package.schema';
 
 export class CreateOrderDto {
   @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1a', description: 'The User ID of the client' })
-  @IsString()
+  @IsMongoId()
   @IsOptional()
   clientId: string;
 
   @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1b', description: 'The related Case ID' })
-  @IsString()
+  @IsMongoId()
   @IsOptional()
   caseId: string;
 
   @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1c', description: 'The purchased Service Package ID' })
-  @IsString()
+  @IsMongoId()
   @IsOptional()
   packageId: ServicePackage;
 
