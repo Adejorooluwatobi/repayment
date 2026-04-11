@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsultationsService } from './consultations.service';
 import { Consultation } from './schemas/consultation.schema';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
+import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
+import { AdminGuard } from 'src/modules/auth/guards/admin.guard';
 
 @ApiTags('Consultations')
+@ApiBearerAuth()
 @Controller('consultations')
 export class ConsultationsController {
   constructor(private readonly consultationsService: ConsultationsService) {}
@@ -18,6 +21,7 @@ export class ConsultationsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({ summary: 'Get all consultations' })
   @ApiResponse({ status: 200, description: 'Return all consultations', type: [Consultation] })
   async findAll(): Promise<Consultation[]> {
@@ -25,6 +29,7 @@ export class ConsultationsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({ summary: 'Get a consultation by ID' })
   @ApiResponse({ status: 200, description: 'Return a single consultation', type: Consultation })
   async findOne(@Param('id') id: string): Promise<Consultation> {
