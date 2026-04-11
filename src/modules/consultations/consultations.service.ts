@@ -15,11 +15,11 @@ export class ConsultationsService {
   }
 
   async findAll(): Promise<Consultation[]> {
-    return this.stmtModel.find().populate('clientId caseId handledBy').exec();
+    return this.stmtModel.find().populate('clientId handledBy').exec();
   }
 
   async findOne(id: string): Promise<Consultation> {
-    const stmt = await this.stmtModel.findById(id).populate('clientId caseId handledBy').exec();
+    const stmt = await this.stmtModel.findById(id).populate('clientId handledBy').exec();
     if (!stmt) throw new NotFoundException(`Consultation with ID ${id} not found`);
     return stmt;
   }

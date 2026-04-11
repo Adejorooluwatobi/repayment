@@ -39,19 +39,30 @@ async function bootstrap() {
   
   // Validation pipe with security settings
   app.useGlobalPipes(new ValidationPipe({ 
-    whitelist: true,
-    forbidNonWhitelisted: true,
+    whitelist: true, // Automatically strip non-whitelisted properties instead of throwing errors
     transform: true,
-    disableErrorMessages: process.env.NODE_ENV === 'production',
     validateCustomDecorators: true,
   }));
 
   // CORS configuration
   app.enableCors({
-    origin: true,
+    origin: (origin, callback) => {
+      // If we are not in production, allow all
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      
+      // In production, allow if origin is localhost or in ALLOWED_ORIGINS
+      const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
+      if (!origin || origin.includes('localhost') || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false); // Block other origins
+      }
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id', 'Accept'],
   });
   
   app.setGlobalPrefix('api/v1');
