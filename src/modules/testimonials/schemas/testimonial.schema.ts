@@ -5,8 +5,8 @@ import { BaseEntity, BaseSchemaOptions } from 'src/common/schemas/base.schema';
 
 @Schema(BaseSchemaOptions)
 export class Testimonial extends BaseEntity {
-  @Prop({ type: Types.ObjectId, ref: 'User' })
-  clientId: Types.ObjectId | User;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  clientId?: Types.ObjectId | User;
 
   @Prop({ required: true })
   authorName: string;
