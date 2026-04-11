@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { Order } from './schemas/order.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
+import { AdminGuard } from 'src/modules/auth/guards/admin.guard';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -23,15 +24,15 @@ export class OrdersController {
   @Get()
   @ApiOperation({ summary: 'Get all orders' })
   @ApiResponse({ status: 200, description: 'Return all orders', type: [Order] })
-  async findAll(): Promise<Order[]> {
-    return this.ordersService.findAll();
+  async findAll(@Request() req: any): Promise<Order[]> {
+    return this.ordersService.findAll(req.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get an order by ID' })
   @ApiResponse({ status: 200, description: 'Return a single order', type: Order })
-  async findOne(@Param('id') id: string): Promise<Order> {
-    return this.ordersService.findOne(id);
+  async findOne(@Param('id') id: string, @Request() req: any): Promise<Order> {
+    return this.ordersService.findOne(id, req.user);
   }
 
   @Patch(':id')
@@ -42,6 +43,7 @@ export class OrdersController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Delete an order' })
   @ApiResponse({ status: 200, description: 'Order deleted successfully' })
   async remove(@Param('id') id: string): Promise<void> {
