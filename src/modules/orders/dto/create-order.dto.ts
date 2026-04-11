@@ -18,18 +18,13 @@ export class CreateOrderDto {
   @IsNotEmpty()
   packageId: ServicePackage;
 
-  @ApiPropertyOptional({ example: 'USD', description: 'The currency of the amount', default: 'USD' })
+  @ApiProperty({ example: 'user@example.com' })
   @IsString()
-  @IsOptional()
-  currency?: string;
+  @IsNotEmpty()
+  email: string;
 
-  @ApiPropertyOptional({ example: 'Credit Card', description: 'The payment method used' })
+  @ApiProperty({ example: '+1234567890' })
   @IsString()
-  @IsOptional()
-  paymentMethod?: string;
-
-  @ApiPropertyOptional({ example: 'TXN-123456789', description: 'The payment gateway reference' })
-  @IsString()
-  @IsOptional()
-  paymentRef?: string;
+  @IsNotEmpty()
+  phone: string;
 }

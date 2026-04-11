@@ -20,8 +20,8 @@ export class OrdersService {
 
     // Notify admins about new order
     await this.notificationsService.notifyAdmins({
-      title: 'New Order Placed',
-      message: `A new order has been placed. Order ID: ${order._id}`,
+      title: 'New Order Placed (Manual Finalization Required)',
+      message: `A new order has been placed by ${order.email}. Phone: ${order.phone}. Please contact the user to finalize the order.`,
       type: 'ORDER',
       refId: order._id as any,
       refModel: 'Order',

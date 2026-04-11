@@ -17,22 +17,13 @@ export class Order extends BaseEntity {
   packageId?: Types.ObjectId | ServicePackage;
 
   @Prop({ default: 'PENDING' })
-  status?: string;
-
-  @Prop({ type: Number })
-  amount?: number;
-
-  @Prop({ default: 'USD' })
-  currency?: string;
+  status: string;
 
   @Prop()
-  paymentMethod?: string;
+  email: string;
 
   @Prop()
-  paymentRef?: string;
-
-  @Prop()
-  paidAt?: Date;
+  phone: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
