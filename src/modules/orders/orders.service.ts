@@ -30,12 +30,14 @@ export class OrdersService {
     return order;
   }
 
-  async findAll(): Promise<Order[]> {
-    return this.orderModel.find().populate('clientId caseId packageId').exec();
+  async findAll(user: any): Promise<Order[]> {
+    const query = user.role === 'ADMIN' ? {} : { clientId: user.id };
+    return this.orderModel.find(query).populate('clientId caseId packageId').exec();
   }
 
-  async findOne(id: string): Promise<Order> {
-    const order = await this.orderModel.findById(id).populate('clientId caseId packageId').exec();
+  async findOne(id: string, user: any): Promise<Order> {
+    const query = user.role === 'ADMIN' ? { _id: id } : { _id: id, clientId: user.id };
+    const order = await this.orderModel.findOne(query).populate('clientId caseId packageId').exec();
     if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
     return order;
   }
