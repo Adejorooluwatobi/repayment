@@ -5,31 +5,26 @@ import { ServicePackage } from 'src/modules/service-packages/schemas/service-pac
 export class CreateOrderDto {
   @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1a', description: 'The User ID of the client' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   clientId: string;
 
   @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1b', description: 'The related Case ID' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   caseId: string;
 
   @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1c', description: 'The purchased Service Package ID' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   packageId: ServicePackage;
 
-  @ApiPropertyOptional({ example: 'USD', description: 'The currency of the amount', default: 'USD' })
+  @ApiProperty({ example: 'user@example.com' })
   @IsString()
   @IsOptional()
-  currency?: string;
+  email: string;
 
-  @ApiPropertyOptional({ example: 'Credit Card', description: 'The payment method used' })
+  @ApiProperty({ example: '+1234567890' })
   @IsString()
   @IsOptional()
-  paymentMethod?: string;
-
-  @ApiPropertyOptional({ example: 'TXN-123456789', description: 'The payment gateway reference' })
-  @IsString()
-  @IsOptional()
-  paymentRef?: string;
+  phone: string;
 }

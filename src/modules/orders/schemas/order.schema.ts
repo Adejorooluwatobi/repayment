@@ -19,20 +19,11 @@ export class Order extends BaseEntity {
   @Prop({ default: 'PENDING' })
   status?: string;
 
-  @Prop({ type: Number })
-  amount?: number;
-
-  @Prop({ default: 'USD' })
-  currency?: string;
+  @Prop()
+  email?: string;
 
   @Prop()
-  paymentMethod?: string;
-
-  @Prop()
-  paymentRef?: string;
-
-  @Prop()
-  paidAt?: Date;
+  phone?: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
