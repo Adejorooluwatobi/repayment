@@ -7,12 +7,14 @@ import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 import { UserModule } from '../users/user.module';
 import { AdminModule } from '../admin/admin.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 
 @Module({
   imports: [
     UserModule,
     forwardRef(() => AdminModule),
+    NotificationsModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
