@@ -2,17 +2,17 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, IsEmail, IsNumber } from 'class-validator';
 
 export class CreateConsultationDto {
-  @ApiPropertyOptional({ example: '60d5ecb8b392d7001f8e8e1a', description: 'The User ID of the client, if registered' })
+  @ApiPropertyOptional({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', description: 'The User ID of the client, if registered' })
   @IsString()
   @IsOptional()
   clientId?: string;
 
-  @ApiPropertyOptional({description: 'The related Case type' })
+  @ApiPropertyOptional({ description: 'The related Case type' })
   @IsString()
   @IsOptional()
   caseType?: string;
 
-  @ApiPropertyOptional({ example: '60d5ecb8b392d7001f8e8e1c', description: 'The Admin ID assigned to this consultation' })
+  @ApiPropertyOptional({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', description: 'The Admin ID assigned to this consultation' })
   @IsString()
   @IsOptional()
   handledBy?: string;
@@ -62,7 +62,7 @@ export class CreateConsultationDto {
   @IsOptional()
   notes?: string;
 
-  @ApiPropertyOptional({ example: '2023-11-20T10:00:00.000Z', description: 'The scheduled time for the consultation' })
+  @ApiPropertyOptional({ example: '2026-11-20T10:00:00.000Z', description: 'The scheduled time for the consultation' })
   @IsOptional()
   scheduledAt?: Date;
 }

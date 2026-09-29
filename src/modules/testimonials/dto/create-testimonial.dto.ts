@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, IsNumber, Min, Max, IsBoolean } from 'class-validator';
 
 export class CreateTestimonialDto {
-  @ApiPropertyOptional({ example: '60d5ecb8b392d7001f8e8e1a', description: 'The User ID of the client providing the testimonial' })
+  @ApiPropertyOptional({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', description: 'The User ID of the client providing the testimonial' })
   @IsString()
   @IsOptional()
   clientId?: string;

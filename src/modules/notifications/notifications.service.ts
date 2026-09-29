@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Notification } from './schemas/notification.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DeepPartial } from 'typeorm';
+import { Notification } from './entities/notification.entity';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { AdminService } from '../admin/admin.service';
@@ -9,90 +9,92 @@ import { AdminService } from '../admin/admin.service';
 @Injectable()
 export class NotificationsService {
   constructor(
-    @InjectModel(Notification.name) private notificationModel: Model<Notification>,
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
     private readonly adminService: AdminService,
   ) {}
 
-  async create(createNotificationDto: CreateNotificationDto | any): Promise<Notification> {
-    const newNotification = new this.notificationModel({
+  async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
+    const newNotification = this.notificationRepository.create({
       ...createNotificationDto,
       onModel: createNotificationDto.onModel || 'User',
-    });
-    return newNotification.save();
+    } as DeepPartial<Notification>);
+    return this.notificationRepository.save(newNotification);
   }
 
   async notifyAdmins(data: { title: string; message: string; type: string; refId?: string; refModel?: string }): Promise<void> {
     const admins = await this.adminService.findAll();
-    const notifications = admins.map(admin => ({
-      userId: admin._id,
-      onModel: 'Admin',
-      title: data.title,
-      message: data.message,
-      type: data.type,
-      refId: data.refId,
-      refModel: data.refModel,
-      read: false,
-    }));
+    const notifications = admins.map(admin =>
+      this.notificationRepository.create({
+        userId: admin.id,
+        onModel: 'Admin',
+        title: data.title,
+        message: data.message,
+        type: data.type,
+        refId: data.refId,
+        refModel: data.refModel,
+        read: false,
+      } as DeepPartial<Notification>),
+    );
 
     if (notifications.length > 0) {
-      await this.notificationModel.insertMany(notifications);
+      await this.notificationRepository.save(notifications);
     }
   }
 
   async findAllForUser(userId: string, onModel: string = 'Admin'): Promise<Notification[]> {
-    return this.notificationModel
-      .find({ userId, onModel })
-      .sort({ createdAt: -1 })
-      .exec();
+    return this.notificationRepository.find({
+      where: { userId, onModel },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async getUnreadCount(userId: string, onModel: string = 'Admin'): Promise<number> {
-    return this.notificationModel.countDocuments({ userId, onModel, read: false }).exec();
+    return this.notificationRepository.count({
+      where: { userId, onModel, read: false },
+    });
   }
 
   async markAllAsRead(userId: string, onModel: string = 'Admin'): Promise<void> {
-    await this.notificationModel
-      .updateMany({ userId, onModel, read: false }, { read: true })
-      .exec();
+    await this.notificationRepository.update(
+      { userId, onModel, read: false },
+      { read: true },
+    );
   }
 
   async markAsRead(id: string): Promise<Notification> {
-    const notification = await this.notificationModel.findByIdAndUpdate(
-      id,
-      { read: true },
-      { new: true },
-    ).exec();
-    if (!notification) throw new NotFoundException(`Notification with ID ${id} not found`);
-    return notification;
+    const notification = await this.findOne(id);
+    notification.read = true;
+    return this.notificationRepository.save(notification);
   }
 
   async findAll(): Promise<Notification[]> {
-    return this.notificationModel.find().populate('userId').sort({ createdAt: -1 }).exec();
+    return this.notificationRepository.find({
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findOne(id: string): Promise<Notification> {
-    const notification = await this.notificationModel.findById(id).populate('userId').exec();
+    const notification = await this.notificationRepository.findOne({ where: { id } });
     if (!notification) throw new NotFoundException(`Notification with ID ${id} not found`);
     
     // Automatically mark as read when fetching single
     if (!notification.read) {
       notification.read = true;
-      await notification.save();
+      await this.notificationRepository.save(notification);
     }
     
     return notification;
   }
 
   async update(id: string, updateNotificationDto: UpdateNotificationDto): Promise<Notification> {
-    const updatedNotification = await this.notificationModel
-      .findByIdAndUpdate(id, updateNotificationDto, { new: true })
-      .exec();
-    if (!updatedNotification) throw new NotFoundException(`Notification with ID ${id} not found`);
-    return updatedNotification;
+    const notification = await this.findOne(id);
+    Object.assign(notification, updateNotificationDto);
+    return this.notificationRepository.save(notification);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.notificationModel.findByIdAndDelete(id).exec();
-    if (!result) throw new NotFoundException(`Notification with ID ${id} not found`);
+    const result = await this.notificationRepository.delete(id);
+    if (!result.affected) throw new NotFoundException(`Notification with ID ${id} not found`);
   }
 }

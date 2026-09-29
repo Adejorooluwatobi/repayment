@@ -1,39 +1,45 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Case } from './schemas/case.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DeepPartial } from 'typeorm';
+import { Case } from './entities/case.entity';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { UpdateCaseDto } from './dto/update-case.dto';
 
 @Injectable()
 export class CasesService {
-  constructor(@InjectModel(Case.name) private caseModel: Model<Case>) {}
+  constructor(
+    @InjectRepository(Case)
+    private readonly caseRepository: Repository<Case>,
+  ) {}
 
-  async create(createCaseDto: CreateCaseDto | any): Promise<Case> {
-    const newCase = new this.caseModel(createCaseDto);
-    return newCase.save();
+  async create(createCaseDto: CreateCaseDto): Promise<Case> {
+    const newCase = this.caseRepository.create(createCaseDto as DeepPartial<Case>);
+    return this.caseRepository.save(newCase);
   }
 
   async findAll(): Promise<Case[]> {
-    return this.caseModel.find().populate('clientId assignedAdminId').exec();
+    return this.caseRepository.find({
+      relations: { client: true, assignedAdmin: true },
+    });
   }
 
   async findOne(id: string): Promise<Case> {
-    const caseItem = await this.caseModel.findById(id).populate('clientId assignedAdminId').exec();
+    const caseItem = await this.caseRepository.findOne({
+      where: { id },
+      relations: { client: true, assignedAdmin: true },
+    });
     if (!caseItem) throw new NotFoundException(`Case with ID ${id} not found`);
     return caseItem;
   }
 
   async update(id: string, updateCaseDto: UpdateCaseDto): Promise<Case> {
-    const updatedCase = await this.caseModel
-      .findByIdAndUpdate(id, updateCaseDto, { new: true })
-      .exec();
-    if (!updatedCase) throw new NotFoundException(`Case with ID ${id} not found`);
-    return updatedCase;
+    const caseItem = await this.findOne(id);
+    Object.assign(caseItem, updateCaseDto);
+    return this.caseRepository.save(caseItem);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.caseModel.findByIdAndDelete(id).exec();
-    if (!result) throw new NotFoundException(`Case with ID ${id} not found`);
+    const result = await this.caseRepository.delete(id);
+    if (!result.affected) throw new NotFoundException(`Case with ID ${id} not found`);
   }
 }

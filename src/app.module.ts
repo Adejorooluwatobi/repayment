@@ -8,7 +8,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggingMiddleware } from './common/middleware/logging.middleware';
 import { SanitizationMiddleware } from './common/middleware/sanitization.middleware';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { typeOrmAsyncConfig } from './config/database.config';
 import { FastifyMulterModule } from '@nest-lab/fastify-multer';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/users/user.module';
@@ -74,12 +75,7 @@ import { HealthController } from './modules/health/health.controller';
       ttl: 60000,
       limit: 100,
     }]),
-    MongooseModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGODB_URI'),
-      }),
-    }),
+    TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     AuthModule,
     UserModule,
     AdminModule,

@@ -1,35 +1,34 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsMongoId } from 'class-validator';
-import { ServicePackage } from 'src/modules/service-packages/schemas/service-package.schema';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateOrderDto {
-  @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1a', description: 'The User ID of the client' })
-  @IsMongoId()
+  @ApiPropertyOptional({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', description: 'The User ID of the client' })
+  @IsString()
   @IsOptional()
-  clientId: string;
+  clientId?: string;
 
-  @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1b', description: 'The related Case ID' })
-  @IsMongoId()
+  @ApiPropertyOptional({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', description: 'The related Case ID' })
+  @IsString()
   @IsOptional()
-  caseId: string;
+  caseId?: string;
 
-  @ApiProperty({ example: '60d5ecb8b392d7001f8e8e1c', description: 'The purchased Service Package ID' })
-  @IsMongoId()
+  @ApiPropertyOptional({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', description: 'The purchased Service Package ID' })
+  @IsString()
   @IsOptional()
-  packageId: ServicePackage;
+  packageId?: string;
 
   @ApiPropertyOptional({ example: 'PENDING', description: 'The status of the order' })
   @IsString()
   @IsOptional()
   status?: string;
 
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiPropertyOptional({ example: 'user@example.com' })
   @IsString()
   @IsOptional()
-  email: string;
+  email?: string;
 
-  @ApiProperty({ example: '+1234567890' })
+  @ApiPropertyOptional({ example: '+1234567890' })
   @IsString()
   @IsOptional()
-  phone: string;
+  phone?: string;
 }

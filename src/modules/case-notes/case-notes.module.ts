@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { CaseNotesController } from './case-notes.controller';
 import { CaseNotesService } from './case-notes.service';
-import { CaseNote, CaseNoteSchema } from './schemas/case-note.schema';
+import { CaseNote } from './entities/case-note.entity';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: CaseNote.name, schema: CaseNoteSchema }]),
-  ],
+  imports: [TypeOrmModule.forFeature([CaseNote])],
   controllers: [CaseNotesController],
   providers: [CaseNotesService],
-  exports: [CaseNotesService],
+  exports: [CaseNotesService, TypeOrmModule],
 })
 export class CaseNotesModule {}
