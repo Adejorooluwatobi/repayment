@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CaseNotesService } from './case-notes.service';
-import { CaseNote } from './schemas/case-note.schema';
+import { CaseNote } from './entities/case-note.entity';
 import { CreateCaseNoteDto } from './dto/create-case-note.dto';
 import { UpdateCaseNoteDto } from './dto/update-case-note.dto';
 

@@ -1,48 +1,38 @@
-import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Consultation } from './schemas/consultation.schema';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DeepPartial } from 'typeorm';
+import { Consultation } from './entities/consultation.entity';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
-
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
-export class ConsultationsService implements OnModuleInit {
+export class ConsultationsService {
   private readonly logger = new Logger(ConsultationsService.name);
 
   constructor(
-    @InjectModel(Consultation.name) private stmtModel: Model<Consultation>,
+    @InjectRepository(Consultation)
+    private readonly consultationRepository: Repository<Consultation>,
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async onModuleInit() {
-    this.logger.log('Running production data cleanup for Consultations...');
-    
-    // Convert empty strings to null for reference fields to prevent population crashes
-    await this.stmtModel.updateMany({ clientId: "" }, { $set: { clientId: null } });
-    await this.stmtModel.updateMany({ handledBy: "" }, { $set: { handledBy: null } });
-    
-    this.logger.log('Consultations data cleanup completed.');
-  }
-
   private sanitizeConsultationData(data: any) {
-    if (data.clientId === "") data.clientId = null;
-    if (data.handledBy === "") data.handledBy = null;
+    if (data.clientId === '' || data.clientId === 'null') data.clientId = null;
+    if (data.handledBy === '' || data.handledBy === 'null') data.handledBy = null;
     return data;
   }
 
-  async create(createConsultationDto: CreateConsultationDto | any): Promise<Consultation> {
+  async create(createConsultationDto: CreateConsultationDto): Promise<Consultation> {
     const sanitizedData = this.sanitizeConsultationData({ ...createConsultationDto });
-    const newStmt = new this.stmtModel(sanitizedData);
-    const consultation = await newStmt.save();
+    const newConsultation = this.consultationRepository.create(sanitizedData as DeepPartial<Consultation>);
+    const consultation = await this.consultationRepository.save(newConsultation);
 
     // Notify admins about new consultation
     await this.notificationsService.notifyAdmins({
       title: 'New Consultation Booking',
       message: `New consultation from ${consultation.firstName} ${consultation.lastName} (${consultation.email}).`,
       type: 'CONSULTATION',
-      refId: consultation._id as any,
+      refId: consultation.id,
       refModel: 'Consultation',
     });
 
@@ -50,26 +40,29 @@ export class ConsultationsService implements OnModuleInit {
   }
 
   async findAll(): Promise<Consultation[]> {
-    return this.stmtModel.find().populate('clientId handledBy').exec();
+    return this.consultationRepository.find({
+      relations: { client: true, handler: true },
+    });
   }
 
   async findOne(id: string): Promise<Consultation> {
-    const stmt = await this.stmtModel.findById(id).populate('clientId handledBy').exec();
-    if (!stmt) throw new NotFoundException(`Consultation with ID ${id} not found`);
-    return stmt;
+    const consultation = await this.consultationRepository.findOne({
+      where: { id },
+      relations: { client: true, handler: true },
+    });
+    if (!consultation) throw new NotFoundException(`Consultation with ID ${id} not found`);
+    return consultation;
   }
 
   async update(id: string, updateConsultationDto: UpdateConsultationDto): Promise<Consultation> {
+    const consultation = await this.findOne(id);
     const sanitizedData = this.sanitizeConsultationData({ ...updateConsultationDto });
-    const updatedStmt = await this.stmtModel
-      .findByIdAndUpdate(id, sanitizedData, { new: true })
-      .exec();
-    if (!updatedStmt) throw new NotFoundException(`Consultation with ID ${id} not found`);
-    return updatedStmt;
+    Object.assign(consultation, sanitizedData);
+    return this.consultationRepository.save(consultation);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.stmtModel.findByIdAndDelete(id).exec();
-    if (!result) throw new NotFoundException(`Consultation with ID ${id} not found`);
+    const result = await this.consultationRepository.delete(id);
+    if (!result.affected) throw new NotFoundException(`Consultation with ID ${id} not found`);
   }
 }

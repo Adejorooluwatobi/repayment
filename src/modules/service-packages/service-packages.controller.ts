@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ServicePackagesService } from './service-packages.service';
-import { ServicePackage } from './schemas/service-package.schema';
+import { ServicePackage } from './entities/service-package.entity';
 import { CreateServicePackageDto } from './dto/create-service-package.dto';
 import { UpdateServicePackageDto } from './dto/update-service-package.dto';
 

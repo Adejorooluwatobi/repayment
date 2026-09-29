@@ -1,50 +1,39 @@
-import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Order } from './schemas/order.schema';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DeepPartial } from 'typeorm';
+import { Order } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
-export class OrdersService implements OnModuleInit {
+export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
   constructor(
-    @InjectModel(Order.name) private orderModel: Model<Order>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async onModuleInit() {
-    this.logger.log('Running production data cleanup for Orders...');
-    
-    // Convert empty strings to null for reference fields to prevent population crashes
-    await this.orderModel.updateMany({ clientId: "" }, { $set: { clientId: null } });
-    await this.orderModel.updateMany({ caseId: "" }, { $set: { caseId: null } });
-    await this.orderModel.updateMany({ packageId: "" }, { $set: { packageId: null } });
-    
-    this.logger.log('Orders data cleanup completed.');
-  }
-
   private sanitizeOrderData(data: any) {
-    if (data.clientId === "") data.clientId = null;
-    if (data.caseId === "") data.caseId = null;
-    if (data.packageId === "") data.packageId = null;
+    if (data.clientId === '' || data.clientId === 'null') data.clientId = null;
+    if (data.caseId === '' || data.caseId === 'null') data.caseId = null;
+    if (data.packageId === '' || data.packageId === 'null') data.packageId = null;
     return data;
   }
 
-  async create(createOrderDto: CreateOrderDto | any): Promise<Order> {
+  async create(createOrderDto: CreateOrderDto): Promise<Order> {
     const sanitizedData = this.sanitizeOrderData({ ...createOrderDto });
-    const newOrder = new this.orderModel(sanitizedData);
-    const order = await newOrder.save();
+    const newOrder = this.orderRepository.create(sanitizedData as DeepPartial<Order>);
+    const order = await this.orderRepository.save(newOrder);
 
     // Notify admins about new order
     await this.notificationsService.notifyAdmins({
       title: 'New Order Placed (Manual Finalization Required)',
-      message: `A new order has been placed by ${order.email}. Phone: ${order.phone}. Please contact the user to finalize the order.`,
+      message: `A new order has been placed by ${order.email || 'customer'}. Phone: ${order.phone || 'N/A'}. Please contact the user to finalize the order.`,
       type: 'ORDER',
-      refId: order._id as any,
+      refId: order.id,
       refModel: 'Order',
     });
 
@@ -52,28 +41,33 @@ export class OrdersService implements OnModuleInit {
   }
 
   async findAll(user: any): Promise<Order[]> {
-    const query = user.role === 'ADMIN' ? {} : { clientId: user.id };
-    return this.orderModel.find(query).populate('clientId caseId packageId').exec();
+    const where = user.role === 'ADMIN' ? {} : { clientId: user.id };
+    return this.orderRepository.find({
+      where,
+      relations: { client: true, case: true, package: true },
+    });
   }
 
   async findOne(id: string, user: any): Promise<Order> {
-    const query = user.role === 'ADMIN' ? { _id: id } : { _id: id, clientId: user.id };
-    const order = await this.orderModel.findOne(query).populate('clientId caseId packageId').exec();
+    const where = user.role === 'ADMIN' ? { id } : { id, clientId: user.id };
+    const order = await this.orderRepository.findOne({
+      where,
+      relations: { client: true, case: true, package: true },
+    });
     if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
     return order;
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
     const sanitizedData = this.sanitizeOrderData({ ...updateOrderDto });
-    const updatedOrder = await this.orderModel
-      .findByIdAndUpdate(id, sanitizedData, { new: true })
-      .exec();
-    if (!updatedOrder) throw new NotFoundException(`Order with ID ${id} not found`);
-    return updatedOrder;
+    Object.assign(order, sanitizedData);
+    return this.orderRepository.save(order);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.orderModel.findByIdAndDelete(id).exec();
-    if (!result) throw new NotFoundException(`Order with ID ${id} not found`);
+    const result = await this.orderRepository.delete(id);
+    if (!result.affected) throw new NotFoundException(`Order with ID ${id} not found`);
   }
 }

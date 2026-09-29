@@ -1,18 +1,17 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../users/user.service';
 import { AdminService } from '../admin/admin.service';
 import { AdminLoginDto, UserLoginDto } from './dto/login.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 interface AuthResponse {
   access_token: string;
-  user?: { isAdmin: boolean; isActive: boolean; name: string; role: string };
-  admin?: { isAdmin: boolean; isActive: boolean; name: string; role: string; permissions: string[] };
+  user?: { id: string; isAdmin: boolean; isActive: boolean; name: string; role: string };
+  admin?: { id: string; isAdmin: boolean; isActive: boolean; name: string; role: string; permissions: string[] };
 }
-
-import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +36,7 @@ export class AuthService {
       title: 'New User Registration',
       message: `A new user ${user.firstName} ${user.lastName} has registered.`,
       type: 'REGISTRATION',
-      refId: user._id as any,
+      refId: user.id,
       refModel: 'User',
     });
   }
@@ -48,12 +47,12 @@ export class AuthService {
       throw new BadRequestException('Invalid credentials');
     }
 
-    const payload = { sub: user._id, email: user.email, role: user.role };
+    const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload);
 
     return {
       access_token: accessToken,
-      user: { isAdmin: false, isActive: true, name: user.firstName, role: user.role },
+      user: { id: user.id, isAdmin: false, isActive: true, name: user.firstName, role: user.role },
     };
   }
 
@@ -67,12 +66,13 @@ export class AuthService {
       throw new BadRequestException('Invalid credentials');
     }
 
-    const payload = { sub: admin._id, email: admin.email, role: 'ADMIN', permissions: admin.permissions };
+    const payload = { sub: admin.id, email: admin.email, role: 'ADMIN', permissions: admin.permissions };
     const accessToken = this.jwtService.sign(payload);
 
     return {
       access_token: accessToken,
       admin: { 
+        id: admin.id,
         isAdmin: true, 
         isActive: true, 
         name: admin.firstName || admin.username, 
@@ -83,9 +83,6 @@ export class AuthService {
   }
 
   async logout(): Promise<{ message: string }> {
-    // In a stateless JWT implementation, the server doesn't need to do anything.
-    // The client is responsible for deleting the token.
-    // This method provides a hook for future features like token blacklisting.
     return { message: 'Logged out successfully' };
   }
 }
