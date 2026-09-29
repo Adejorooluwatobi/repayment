@@ -61,8 +61,18 @@ export class AuthService {
   }
 
   async loginAdmin(adminLog: AdminLoginDto): Promise<AuthResponse> {
-    const admin = await this.adminService.findByEmail(adminLog.email as any);
-    if (!admin || !(await bcrypt.compare(adminLog.password, admin.password))) {
+    const email = (adminLog.email || '').trim().toLowerCase();
+    const password = (adminLog.password || '').trim();
+
+    const admin = await this.adminService.findByEmail(email);
+    if (!admin) {
+      this.logger.warn(`Admin login attempt failed: no admin found matching ${email}`);
+      throw new BadRequestException('Invalid credentials');
+    }
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      this.logger.warn(`Admin login attempt failed: incorrect password for ${email}`);
       throw new BadRequestException('Invalid credentials');
     }
 
@@ -80,6 +90,10 @@ export class AuthService {
         permissions: admin.permissions 
       },
     };
+  }
+
+  async seedAdmin(): Promise<any> {
+    return this.adminService.seedInitialAdmin();
   }
 
   async logout(): Promise<{ message: string }> {

@@ -43,6 +43,14 @@ export class AuthController {
     return this.authService.loginAdmin(adminData);
   }
 
+  @Post('seed-admin')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Seed or update initial admin credentials from environment variables' })
+  @ApiResponse({ status: 200, description: 'Admin seed status message' })
+  async seedAdmin(): Promise<any> {
+    return this.authService.seedAdmin();
+  }
+
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
